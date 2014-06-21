@@ -1,4 +1,4 @@
 disk-mgmt-tool
 ==============
 
-Python script to create, format and manage disk images.
+Disk-mgmt-tool is a simple script that allows you to create, format and add files to a hard disk image file.
