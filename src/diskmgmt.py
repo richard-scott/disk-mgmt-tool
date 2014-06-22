@@ -111,7 +111,7 @@ def main():
     # top-level parser
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description='Disk image management tool.',
-                                     epilog="""Type %(prog)s <image name> <command> -h for contextual help.\nSupported FS are: fat32.""")
+                                     epilog="""Type %(prog)s <image name> <command> -h for contextual help.""")
 
     parser.add_argument('image_name', metavar='<image name>', type=str, help='disk image file name')
     subparsers=parser.add_subparsers(metavar='<command>', help='one of the following')
