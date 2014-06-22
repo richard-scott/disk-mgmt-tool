@@ -71,7 +71,8 @@ def add_mbr(args):
 
 def format_partition(args):
     try:
-        execute(['sudo', 'parted','--script','%s' %args.image_name, 'unit s mkpart primary %s %d %d' %(args.fs_type, args.sector_start, args.sector_end)])
+        execute(['sudo', 'parted', '--script', '%s' %args.image_name,
+                 'unit s mkpart primary %s %d %d' %(args.fs_type, args.sector_start, args.sector_end)])
     except CalledProcessError:
         print 'Error while creating the partition. Aborting.'
         os._exit(1)
@@ -114,38 +115,72 @@ def main():
                                      epilog="""Type %(prog)s <command> -h for contextual help.""")
     # shared arguments parsers
     imgname_p = argparse.ArgumentParser(add_help=False)
-    imgname_p.add_argument('image_name', metavar='<image name>', type=str, help='Disk image file name')
+    imgname_p.add_argument('image_name',
+                           metavar='<image name>',
+                           type=str, 
+                           help='Disk image file name')
     fstype_p = argparse.ArgumentParser(add_help=False)
-    fstype_p.add_argument('fs_type', metavar='<FS type>', type=str, help='File system type')
+    fstype_p.add_argument('fs_type',
+                          metavar='<FS type>',
+                          type=str, 
+                          help='File system type')
     pindex_p = argparse.ArgumentParser(add_help=False)
-    pindex_p.add_argument('part_index', metavar='<partition index>', type=int, help='The partition index')
+    pindex_p.add_argument('part_index', 
+                          metavar='<partition index>', 
+                          type=int, 
+                          help='The partition index')
 
     # subparsers
-    subparsers=parser.add_subparsers(metavar='<command>', help='One of the following')
+    subparsers=parser.add_subparsers(metavar='<command>', 
+                                     help='One of the following')
 
     # 'create' command parser
-    create_parser = subparsers.add_parser('create', help='Create a disk image named <image name>', parents=[imgname_p])
-    create_parser.add_argument ('image_size', metavar='<image size>', type=int, help='Disk image size in MiB')
+    create_parser = subparsers.add_parser('create', 
+                                          help='Create a disk image named <image name>', 
+                                          parents=[imgname_p])
+    create_parser.add_argument ('image_size', 
+                                metavar='<image size>', 
+                                type=int, 
+                                help='Disk image size in MiB')
     create_parser.set_defaults(func=create_image)
 
     # 'add mbr sector' command parser
-    mbr_parser = subparsers.add_parser ('mbr', help='Insert a given mbr sector inside a given image', parents=[imgname_p])
-    mbr_parser.add_argument ('mbr_sector', metavar='<mbr sector>', type=str, help='MBR sector file name')
+    mbr_parser = subparsers.add_parser ('mbr', 
+                                        help='Insert a given mbr sector inside a given image', 
+                                        parents=[imgname_p])
+    mbr_parser.add_argument ('mbr_sector', 
+                             metavar='<mbr sector>', 
+                             type=str, 
+                             help='MBR sector file name')
     mbr_parser.set_defaults(func=add_mbr)
 
     # 'format' command parser
-    format_parser = subparsers.add_parser ('format', help='Create a format a partition inside a given image', parents=[imgname_p, fstype_p])
-    format_parser.add_argument('sector_start', metavar='<sector start>', type=int, help='Starting sector number')
-    format_parser.add_argument('sector_end', metavar='<sector end>', type=int, help='Ending sector number')
+    format_parser = subparsers.add_parser ('format', 
+                                           help='Create a format a partition inside a given image', 
+                                           parents=[imgname_p, fstype_p])
+    format_parser.add_argument('sector_start', 
+                               metavar='<sector start>', 
+                               type=int, 
+                               help='Starting sector number')
+    format_parser.add_argument('sector_end', 
+                               metavar='<sector end>', 
+                               type=int, help='Ending sector number')
     format_parser.set_defaults(func=format_partition)
 
     # 'set active partition' command parser
-    active_parser = subparsers.add_parser ('active', help='Set a partition as active inside a given image', parents=[imgname_p, pindex_p])
+    active_parser = subparsers.add_parser ('active', 
+                                           help='Set a partition as active inside a given image', 
+                                           parents=[imgname_p, pindex_p])
     active_parser.set_defaults(func=active_partition)
 
     # 'load file' command parser
-    load_parser = subparsers.add_parser('load', help='Load a given file inside a given image', parents=[imgname_p, fstype_p, pindex_p])
-    load_parser.add_argument('file_name', metavar='<file name>', type=str, help='The file name to be loaded')
+    load_parser = subparsers.add_parser('load', 
+                                        help='Load a given file inside a given image', 
+                                        parents=[imgname_p, fstype_p, pindex_p])
+    load_parser.add_argument('file_name', 
+                             metavar='<file name>', 
+                             type=str, 
+                             help='The file name to be loaded')
     load_parser.set_defaults(func=load_file)
 
     # Get the args and call the right function
