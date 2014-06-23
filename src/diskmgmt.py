@@ -54,8 +54,10 @@ def create_image(args):
         
     disk_image = parted.Device(args.image_name)
     logic_disk = parted.freshDisk (disk_image, 'msdos')
-    logic_disk.commitToDevice()
-    print 'Partition table created succesfully.'
+    if logic_disk.commit() == True:
+        print 'Partition table created succesfully.'
+    else:
+        print 'Error while creating the partition table. Aborting.'
 
 def add_mbr(args):
     truncated_mbr_size=446
