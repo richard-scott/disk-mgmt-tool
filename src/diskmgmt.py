@@ -58,6 +58,7 @@ def create_image(args):
         print 'Partition table created succesfully.'
     else:
         print 'Error while creating the partition table. Aborting.'
+        os._exit(1)
 
 def add_mbr(args):
     truncated_mbr_size=446
@@ -89,7 +90,8 @@ def format_partition(args):
     if logic_disk.commit() == True:
         print 'Partition created successfully.'
     else:
-        print 'Error while creating the partition. Aborting'
+        print 'Error while creating the partition. Aborting.'
+        os._exit(1)
 
     loop_dev = attach_loopback (args.image_name, args.sector_start, args.sector_end)
     
@@ -116,6 +118,7 @@ def active_partition(args):
        print 'Partition no. %d sucessfully set as active.' %args.part_index
    else:
        print 'Error while trying to set an active partition. Aborting.'
+       os._exit(1)
 
 def load_file(args):   
     disk_image=parted.Device (args.image_name)
@@ -138,8 +141,10 @@ def load_file(args):
         execute(['umount', 'mnt/'])
     except CalledProcessError:
         print 'Error while mounting/umounting the partition. Aborting.'
+        os._exit(1)
     except IOError:
         print 'Error while copying the file %s. Aborting.' %args.file_name
+        os._exit(1)
     else:
         print 'File %s copied successfully.' %args.file_name
    
