@@ -7,13 +7,17 @@
 ##
 
 import subprocess
-from subprocess import CalledProcessError
 import argparse
 import os
 import losetup
+import parted
+import _ped
+import shutil
+import time
+from subprocess import CalledProcessError
 
 ## Loopback device handling
-def attachLoopback (target, start_offset, end_offset):
+def attach_loopback (target, start_offset, end_offset):
     offset = start_offset * 512
     sizelimit = (end_offset - start_offset) * 512
 
@@ -22,8 +26,14 @@ def attachLoopback (target, start_offset, end_offset):
     loop.mount (target, offset, sizelimit)
     return loop
 
-def detachLoopback (loop_dev):
+def detach_loopback (loop_dev):
     loop_dev.unmount()
+
+## Misc functions
+def check_partition_index (index, max_index):
+    if not 1 <= index <= max_index:
+        print '%d is not a valid partition index or the partition does not exist. Aborting.' %index
+        os._exit(1)
 
 ## Command functions
 def execute (command):
@@ -41,14 +51,11 @@ def create_image(args):
         os._exit(1)
     else:
         print "Disk image %s created successfully." %args.image_name
-    
-    try:
-        execute(['sudo', 'parted','--script','%s' %args.image_name,'mklabel msdos'])
-    except CalledProcessError:
-        print 'Error while creating the partition table. Aborting.'
-        os._exit(1)
-    else:
-        print 'Partition table created succesfully.'
+        
+    disk_image = parted.Device(args.image_name)
+    logic_disk = parted.freshDisk (disk_image, 'msdos')
+    logic_disk.commitToDevice()
+    print 'Partition table created succesfully.'
 
 def add_mbr(args):
     truncated_mbr_size=446
@@ -70,16 +77,19 @@ def add_mbr(args):
 
 
 def format_partition(args):
-    try:
-        execute(['sudo', 'parted', '--script', '%s' %args.image_name,
-                 'unit s mkpart primary %s %d %d' %(args.fs_type, args.sector_start, args.sector_end)])
-    except CalledProcessError:
-        print 'Error while creating the partition. Aborting.'
-        os._exit(1)
+    disk_image=parted.Device (args.image_name)
+    logic_disk=parted.Disk (disk_image)
+    geom=parted.Geometry (disk_image, args.sector_start, args.sector_end - args.sector_start +1)
+    fs=parted.FileSystem (args.fs_type, geom)
+    cons=parted.Constraint (exactGeom=geom)
+    partition=parted.Partition (logic_disk, parted.PARTITION_NORMAL, fs, geom)
+    logic_disk.addPartition (partition, cons)
+    if logic_disk.commit() == True:
+        print 'Partition created successfully.'
     else:
-        print 'Parition created successfully.'
-        
-    loop_dev = attachLoopback (args.image_name, args.sector_start, args.sector_end)
+        print 'Error while creating the partition. Aborting'
+
+    loop_dev = attach_loopback (args.image_name, args.sector_start, args.sector_end)
     
     try:
         if args.fs_type == 'fat32':
@@ -90,21 +100,49 @@ def format_partition(args):
         os._exit(1)
     else:
         print 'Parition formatted successfully as %s.' %args.fs_type
-    
-    detachLoopback(loop_dev)
+                               
+    time.sleep(1)
+    detach_loopback(loop_dev)
     
 def active_partition(args):
+   disk_image=parted.Device (args.image_name)
+   logic_disk=parted.Disk (disk_image)
+   check_partition_index (args.part_index, logic_disk.lastPartitionNumber)
+   partition=logic_disk.partitions[args.part_index-1]
+   partition.setFlag (_ped.PARTITION_BOOT)
+   if logic_disk.commit() == True:
+       print 'Partition no. %d sucessfully set as active.' %args.part_index
+   else:
+       print 'Error while trying to set an active partition. Aborting.'
+
+def load_file(args):   
+    disk_image=parted.Device (args.image_name)
+    logic_disk=parted.Disk (disk_image)
+    check_partition_index (args.part_index, logic_disk.lastPartitionNumber)
+    partition=logic_disk.partitions[args.part_index-1]
+    start_sector=partition.geometry.start
+    end_sector=partition.geometry.end
+    
+    loop_dev = attach_loopback (args.image_name, start_sector, end_sector)
+    
+    fs_type=''
+    if args.fs_type == 'fat32':
+        fs_type='vfat'
+    #else (...)
+    
     try:
-        execute(['sudo', 'parted','--script','%s' %args.image_name, 'set %d boot on' %args.part_index])
+        execute(['mount','-t', fs_type, loop_dev.device, 'mnt/'])
+        shutil.copyfile(args.file_name, 'mnt/%s' %args.file_name)
+        execute(['umount', 'mnt/'])
     except CalledProcessError:
-        print 'Error while setting partition no. %d as active Aborting.' %args.part_index
-        os._exit(1)
+        print 'Error while mounting/umounting the partition. Aborting.'
+    except IOError:
+        print 'Error while copying the file %s. Aborting.' %args.file_name
     else:
-        print 'Set partition no. %d as active successfully.' %args.part_index
-
-
-def load_file(args):
-    print 'load'
+        print 'File %s copied successfully.' %args.file_name
+   
+    time.sleep(1)
+    detach_loopback (loop_dev)
 
 ## main
 def main():
