@@ -7,7 +7,12 @@ This module allows Python program to mount file as loop device.
 Some parts of this code based on util-linux-ng project (http://userweb.kernel.org/~kzak/util-linux-ng/)
 
 Copyright (C) 2008 Sergey Kirillov, Rainboo Software
- 
+
+--------------------------------------------------- 
+                     WARNING:
+---------------------------------------------------
+Minor changes made to get Python 3.x compatibility
+---------------------------------------------------
 """
 
 __version__ = '2.0.7'
@@ -56,20 +61,21 @@ class Status64(object):
             
         data = struct.unpack(self._fmt, buf.tostring())
         i = iter(data)
-        self.lo_device = i.next()
-        self.lo_inode = i.next()
-        self.lo_rdevice = i.next()
-        self.lo_offset = i.next()
-        self.lo_sizelimit = i.next()
-        self.lo_number = i.next()
-        self.lo_encrypt_type = i.next()
-        self.lo_encrypt_key_size = i.next()
-        self.lo_flags = i.next()
-        self.lo_filename = i.next().rstrip('\0')
-        self.lo_crypt_name = i.next().rstrip('\0')
-        self.lo_encrypt_key = i.next()[:self.lo_encrypt_key_size]
-        self.lo_init = (i.next(), i.next())
-
+        self.lo_device = next(i) # <-- python 3.x
+        #self.lo_device = i.next() <-- python 2.x
+        self.lo_inode = next(i)
+        self.lo_rdevice = next(i)
+        self.lo_offset = next(i)
+        self.lo_sizelimit = next(i)
+        self.lo_number = next(i)
+        self.lo_encrypt_type = next(i)
+        self.lo_encrypt_key_size = next(i)
+        self.lo_flags = next(i)
+        #self.lo_filename=next(i).rstrip('\0') <-- python 2.x
+        self.lo_filename = next(i).decode().rstrip('\0') # <-python 3.x
+        self.lo_crypt_name = next(i).decode().rstrip('\0')
+        self.lo_encrypt_key = next(i)[:self.lo_encrypt_key_size]
+        self.lo_init = (next(i),next(i))
 
     def dump(self):
         return struct.pack(self._fmt, 
@@ -82,8 +88,9 @@ class Status64(object):
                            self.lo_encrypt_type, 
                            self.lo_encrypt_key_size,
                            self.lo_flags,
-                           self.lo_filename,
-                           self.lo_crypt_name,
+                           #self.lo_filename <-- python 2.x
+                           bytes(self.lo_filename,'utf-8'), # <-- python 3.x
+                           bytes(self.lo_crypt_name,'utf-8'),
                            self.lo_encrypt_key,
                            self.lo_init[0],
                            self.lo_init[1])
@@ -191,7 +198,7 @@ class LoopDevice(object):
         
         try:
             fcntl.ioctl(fd, self.LOOP_GET_STATUS64, buf, True)
-        except IOError, e:
+        except IOError as e:
             if e.errno == 6:
                 raise LoopNotMountedError("Loop device '%s' is not mounted" % self.device)
             else:
@@ -213,7 +220,8 @@ def is_loop(filename):
 def find_unused_loop_device():
     """Find first unused loop device"""
     devs = get_loop_devices()
-    for num, dev in _loop_devices.iteritems():
+    #for num, dev in _loop_devices.iteritems(): <-- python 2.x
+    for num, dev in _loop_devices.items(): # <-- python 3.x
         if not dev.is_used():
             return dev
         
