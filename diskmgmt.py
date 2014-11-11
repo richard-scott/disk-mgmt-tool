@@ -93,13 +93,13 @@ def add_mbr(args):
     else:
         print ('MBR {0} loaded successfully.' 
                .format(args.mbr_sector))
-def inject(args)
+def inject(args):
 
     ## Data injection
     try:
         image=open(args.image_name,'r+b')
         data=open(args.data,'rb')
-        if args.trunc_length != -1:
+        if args.trunc_length == -1:
             data_truncated = data.read()
         else:
             data_truncated = data.read(trunc_length)
@@ -112,8 +112,6 @@ def inject(args)
         exit(1)
     else:
         print ('Injection completed successfully.')
-
-
 
 def create_partition(args):
 
@@ -286,6 +284,24 @@ def main():
                             type=str,
                             help='MBR sector file name')
     mbr_parser.set_defaults(func=add_mbr)
+
+    # 'inject' command parser
+    inject_parser=subparsers.add_parser('inject',
+                                        help='Inject a given raw data file into a given image',
+                                        parents=[imgname_p])
+    inject_parser.add_argument('data',
+                               metavar='<raw data>',
+                               type=str,
+                               help='raw data file name')
+    inject_parser.add_argument('trunc_length',
+                               metavar='<truncation length>',
+                               type=int,
+                               help='end offset (in byte) of raw data file to copy from (-1 for whole file)')
+    inject_parser.add_argument('starting_index',
+                               metavar='<starting offset>',
+                               type=str,
+                               help='inject starting from starting offset of image file')
+    inject_parser.set_defaults(func=inject)
 
     # 'format' command parser
     format_parser=subparsers.add_parser('format',
