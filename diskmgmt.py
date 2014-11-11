@@ -93,6 +93,27 @@ def add_mbr(args):
     else:
         print ('MBR {0} loaded successfully.' 
                .format(args.mbr_sector))
+def inject(args)
+
+    ## Data injection
+    try:
+        image=open(args.image_name,'r+b')
+        data=open(args.data,'rb')
+        if args.trunc_length != -1:
+            data_truncated = data.read()
+        else:
+            data_truncated = data.read(trunc_length)
+        image.seek(args.starting_index)
+        image.write(data_truncated)
+        data.close()
+        image.close()
+    except IOError:
+        printf('Error while loading data. Aborting.')
+        exit(1)
+    else:
+        print ('Injection completed successfully.')
+
+
 
 def create_partition(args):
 
