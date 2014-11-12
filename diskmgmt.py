@@ -102,9 +102,9 @@ def inject(args):
         raw_data=open(args.raw_data,'rb')
         raw_data.seek(args.raw_start_offset)
         if args.raw_trunc_length == -1:
-            data_portion = data.read()
+            data_portion = raw_data.read()
         else:
-            data_portion = data.read(args.raw_trunc_length)
+            data_portion = raw_data.read(args.raw_trunc_length)
         image.seek(args.image_start_offset)
         image.write(data_portion)
         data.close()
