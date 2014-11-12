@@ -93,18 +93,20 @@ def add_mbr(args):
     else:
         print ('MBR {0} loaded successfully.' 
                .format(args.mbr_sector))
+
 def inject(args):
 
     ## Data injection
     try:
         image=open(args.image_name,'r+b')
-        data=open(args.data,'rb')
+        raw_data=open(args.raw_data,'rb')
+        raw_data.seek(args.raw_start_offset)
         if args.trunc_length == -1:
-            data_truncated = data.read()
+            data_portion = data.read()
         else:
-            data_truncated = data.read(args.trunc_length)
-        image.seek(args.starting_index)
-        image.write(data_truncated)
+            data_portion = data.read(args.raw_trunc_length)
+        image.seek(args.image_start_offset)
+        image.write(data_portion)
         data.close()
         image.close()
     except IOError:
@@ -289,18 +291,22 @@ def main():
     inject_parser=subparsers.add_parser('inject',
                                         help='Inject a given raw data file into a given image',
                                         parents=[imgname_p])
-    inject_parser.add_argument('data',
+    inject_parser.add_argument('raw_data',
                                metavar='<raw data>',
                                type=str,
-                               help='raw data file name')
-    inject_parser.add_argument('trunc_length',
-                               metavar='<truncation length>',
+                               help='Raw data file name')
+    inject_parser.add_argument('raw_start_offset',
+                               metavar='<raw start offset>',
                                type=int,
-                               help='end offset (in byte) of raw data file to copy from (-1 for whole file)')
-    inject_parser.add_argument('starting_index',
-                               metavar='<starting offset>',
+                               help='Starting offset (in byte) of raw data')
+    inject_parser.add_argument('raw_trunc_length',
+                               metavar='<raw truncation length>',
                                type=int,
-                               help='inject starting from starting offset of image file')
+                               help='Length (in byte) of the portion of raw data to be injected (-1 means up to EOF)')
+    inject_parser.add_argument('image_start_offset',
+                               metavar='<image start offset>',
+                               type=int,
+                               help='Inject raw data starting from <image start offset>')
     inject_parser.set_defaults(func=inject)
 
     # 'format' command parser
