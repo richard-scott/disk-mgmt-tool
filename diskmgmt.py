@@ -151,6 +151,22 @@ def active_partition(args):
         print('Partitition no. {0} set as active successfully.'
               .format(args.part_index))
 
+def print_partition_table(args):
+
+    ## Print partition table
+    cmd_string='parted {0} unit s print'\
+    .format(args.image_name)
+
+    try:
+        pt_table_listing=output_execute(cmd_string).decode('utf-8')
+    except CalledProcessError:
+        print('Error while reading partition table. Aborting.')
+        exit(1)
+    else:
+        print('{0}'
+              .format(pt_table_listing))
+
+    
 def extract_partition_boundaries(args):
 
     ## Start/end sector extraction
@@ -297,6 +313,12 @@ def main():
                                         help='Set a prtition as active inside a given image',
                                         parents=[imgname_p, pindex_p])
     active_parser.set_defaults(func=active_partition)
+
+    # 'print partition table' command parser
+    print_pt_parser=subparsers.add_parser('printpt',
+                                          help='Print the partition table given an image',
+                                          parents=[imgname_p])
+    print_pt_parser.set_defaults(func=print_partition_table)
 
     # 'load file' command parser
     load_parser=subparsers.add_parser('load',
