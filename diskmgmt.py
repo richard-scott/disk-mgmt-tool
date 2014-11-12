@@ -256,16 +256,6 @@ def main():
                                help='Disk image size in MiB')
     create_parser.set_defaults(func=create_image)
 
-    # 'add mbr sector' command parser
-    mbr_parser=subparsers.add_parser('mbr',
-                                     help='Insert a given mbr sector into a given image',
-                                     parents=[imgname_p])
-    mbr_parser.add_argument('mbr_sector',
-                            metavar='<mbr sector>',
-                            type=str,
-                            help='MBR sector file name')
-    mbr_parser.set_defaults(func=add_mbr)
-
     # 'inject' command parser
     inject_parser=subparsers.add_parser('inject',
                                         help='Inject a given raw data file into a given image',
