@@ -299,7 +299,7 @@ def main():
                                help='end offset (in byte) of raw data file to copy from (-1 for whole file)')
     inject_parser.add_argument('starting_index',
                                metavar='<starting offset>',
-                               type=str,
+                               type=int,
                                help='inject starting from starting offset of image file')
     inject_parser.set_defaults(func=inject)
 
