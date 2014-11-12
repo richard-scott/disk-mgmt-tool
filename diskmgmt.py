@@ -102,7 +102,7 @@ def inject(args):
         if args.trunc_length == -1:
             data_truncated = data.read()
         else:
-            data_truncated = data.read(trunc_length)
+            data_truncated = data.read(args.trunc_length)
         image.seek(args.starting_index)
         image.write(data_truncated)
         data.close()
