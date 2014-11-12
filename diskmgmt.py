@@ -73,27 +73,6 @@ def create_image(args):
     else:
         print('Partition table created successfully.')
     
-def add_mbr(args):
-
-    ##  Mbr loading
-    truncated_mbr_size=446
-    truncated_mbr=bytearray()
-
-    try:
-        out=open(args.image_name,'r+b')
-        sector=open(args.mbr_sector,'rb')
-        truncated_mbr=sector.read(truncated_mbr_size)
-        out.seek(0)
-        out.write(truncated_mbr)
-        sector.close()
-        out.close()
-    except IOError:
-        print('Error while loading the given MBR. Aborting.')
-        exit(1)
-    else:
-        print ('MBR {0} loaded successfully.' 
-               .format(args.mbr_sector))
-
 def inject(args):
 
     ## Data injection
@@ -107,7 +86,7 @@ def inject(args):
             data_portion = raw_data.read(args.raw_trunc_length)
         image.seek(args.image_start_offset)
         image.write(data_portion)
-        data.close()
+        raw_data.close()
         image.close()
     except IOError:
         printf('Error while loading data. Aborting.')
